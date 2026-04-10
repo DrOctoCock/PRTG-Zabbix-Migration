@@ -1,0 +1,123 @@
+{
+  "defaults": {
+    "defaultHostGroup": "Migrated from PRTG",
+    "technicalNameStrategy": "prtg_objid",
+    "visibleNameStrategy": "device",
+    "hostStatus": "enabled",
+    "skipDevicesWithoutSupportedInterface": true,
+    "preservePrtgTagsAsZabbixTags": true,
+    "addProbeAndGroupAsTags": true
+  },
+  "groupRules": [
+    {
+      "name": "Windows hosts into migration subgroup",
+      "match": {
+        "groupRegex": "(?i)windows"
+      },
+      "targetGroups": [
+        "Migration/Windows"
+      ]
+    },
+    {
+      "name": "Network devices into network subgroup",
+      "match": {
+        "sensorTypeRegex": "^snmp"
+      },
+      "targetGroups": [
+        "Migration/Network"
+      ]
+    }
+  ],
+  "interfaceRules": [
+    {
+      "name": "Zabbix agent by explicit device tag",
+      "match": {
+        "deviceTagRegex": "(^|[\\s,;])zbx-agent($|[\\s,;])"
+      },
+      "interface": {
+        "type": "AGENT",
+        "port": "10050",
+        "main": true,
+        "address": "host"
+      },
+      "templates": [
+        "Windows by Zabbix agent",
+        "Linux by Zabbix agent"
+      ]
+    },
+    {
+      "name": "SNMP devices",
+      "match": {
+        "sensorTypeRegex": "^snmp"
+      },
+      "interface": {
+        "type": "SNMP",
+        "port": "161",
+        "main": true,
+        "address": "host",
+        "details": {
+          "version": 2,
+          "bulk": 1
+        }
+      },
+      "macros": [
+        {
+          "macro": "{$SNMP_COMMUNITY}",
+          "value": "CHANGE_ME",
+          "description": "Replace with the correct SNMP community or convert to SNMPv3 details."
+        }
+      ],
+      "templates": [
+        "Templates/Network Device by SNMP"
+      ]
+    },
+    {
+      "name": "JMX devices",
+      "match": {
+        "sensorTypeRegex": "^jmx"
+      },
+      "interface": {
+        "type": "JMX",
+        "port": "12345",
+        "main": true,
+        "address": "host"
+      },
+      "templates": [
+        "Java by JMX"
+      ]
+    }
+  ],
+  "templateRules": [
+    {
+      "name": "iLO and iDRAC devices",
+      "match": {
+        "deviceRegex": "(?i)ilo|idrac"
+      },
+      "templates": [
+        "Template Module Interfaces SNMP"
+      ]
+    }
+  ],
+  "macroRules": [
+    {
+      "name": "SNMPv3 placeholders",
+      "match": {
+        "deviceTagRegex": "(?i)snmpv3"
+      },
+      "macros": [
+        {
+          "macro": "{$SNMP_SECURITYNAME}",
+          "value": "CHANGE_ME"
+        },
+        {
+          "macro": "{$SNMP_AUTHPASSPHRASE}",
+          "value": "CHANGE_ME"
+        },
+        {
+          "macro": "{$SNMP_PRIVPASSPHRASE}",
+          "value": "CHANGE_ME"
+        }
+      ]
+    }
+  ]
+}
